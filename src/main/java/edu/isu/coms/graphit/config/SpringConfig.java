@@ -28,6 +28,11 @@ public class SpringConfig {
         return mongoApplicationDB().getCollection("tweetsdump");
     }
 
+    @Bean(name = "searchmetadata")
+    public DBCollection searchMetatdata() throws Exception {
+        return mongoApplicationDB().getCollection("searchMetadata");
+    }
+
     @Bean
     public MongoClient mongo() throws Exception {
         MongoClientOptions.Builder builder = new MongoClientOptions.Builder();

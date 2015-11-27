@@ -1,6 +1,7 @@
 switch graphit
 db.createCollection("tweets")
 db.createCollection("tweetsdump")
+db.createCollection("searchMetadata")
 db.createUser(
    {
      user: "graphit",
