@@ -1,13 +1,12 @@
 package edu.isu.coms.graphit.controllers;
 
 import com.mongodb.*;
-import com.mongodb.util.JSON;
-import edu.isu.coms.graphit.config.SpringConfig;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,15 +27,25 @@ public class TwitterController {
 
     @Resource(name="tweetsdump")
     private DBCollection tweetsDumpCollection;
-
     @Resource(name="searchmetadata")
     private DBCollection searchMetadataCollection;
 
     @RequestMapping(value = "/timeline", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
-    public @ResponseBody Object getTimelineTweets() {
+    public @ResponseBody Object getTimelineTweets(@RequestParam("searchString") String searchString) {
+        while(performRawTweetCollection(searchString)) {
+            try {
+                Thread.sleep(15 * 60 * 1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+        return "Done";
+    }
+
+    private boolean performRawTweetCollection(String searchString) {
         int count = 0;
         RestTemplate restTemplate = new RestTemplate();
-        String searchString = "star wars";
         String encodedSearchString = null;
         try {
             encodedSearchString = URLEncoder.encode(searchString, "UTF-8").replace("+", "%2B");
@@ -51,7 +60,7 @@ public class TwitterController {
         headers.add("Content-Type", "application/json");
         headers.add("Authorization", authToken);
         HttpEntity<String> request = new HttpEntity<String>(headers);
-        while(count++ < 15){
+        while(count++ < 180){
             String queryURL = timelineUrl;
             if (max_id != null){
                 queryURL += queryURL + max_id;
@@ -71,6 +80,9 @@ public class TwitterController {
                 }
                 rawTweets.add(tweet);
             }
+            if (rawTweets.size() < 1) {
+                break;
+            }
             LinkedHashMap<String,Object> searchMetadata = (LinkedHashMap<String,Object>)results.get("search_metadata");
             searchMetadata.put("max_id", max_id);
             searchMetadatas.add(new BasicDBObject(searchMetadata));
@@ -85,7 +97,11 @@ public class TwitterController {
                 e.printStackTrace();
             }
         }
-        return "Done";
+        if(count == 180) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private Long findMaxIdForSearchString(String encodedSearchString) {
