@@ -31,6 +31,7 @@ public class TwitterController {
     public @ResponseBody Object getTimelineTweets(@RequestParam("searchString") String searchString) {
         while(performRawTweetCollection(searchString.replace(" ", "+"))) {
             try {
+                System.out.print("Sleeping for 15 mins");
                 Thread.sleep(15 * 60 * 1000);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -42,6 +43,7 @@ public class TwitterController {
 
     private boolean performRawTweetCollection(String searchString) {
         int count = 0;
+        boolean noResults = false;
         RestTemplate restTemplate = new RestTemplate();
         String queryString = "?q="+ searchString +"&count=100&result_type=recent&max_id=";
         Long max_id = findMaxIdForSearchString(searchString);
@@ -64,6 +66,7 @@ public class TwitterController {
             LinkedHashMap<String,Object> results= (LinkedHashMap<String,Object>)responseEntity.getBody();
             List tweets = (ArrayList)results.get("statuses");
             if(tweets.size() < 1) {
+                noResults = true;
                 break;
             }
             Iterator iterator = tweets.iterator();
@@ -84,10 +87,10 @@ public class TwitterController {
                 System.exit(1);
             }
         }
-        if(count == 180) {
-            return true;
-        } else {
+        if(noResults) {
             return false;
+        } else {
+            return true;
         }
     }
 
