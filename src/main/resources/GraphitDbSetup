@@ -9,3 +9,4 @@ db.createUser(
      roles: [ "readWrite", "dbAdmin" ]
    }
 )
+db.tweetsdump.ensureIndex({'id' : 1}, {unique : true, dropDups : true})
