@@ -1,0 +1,10 @@
+switch graphit
+db.createCollection("tweets")
+db.createCollection("tweetsdump")
+db.createUser(
+   {
+     user: "graphit",
+     pwd: "graphit",
+     roles: [ "readWrite", "dbAdmin" ]
+   }
+)
