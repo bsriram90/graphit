@@ -29,7 +29,7 @@ public class SpringConfig {
     }
 
     @Bean(name = "searchmetadata")
-    public DBCollection searchMetatdata() throws Exception {
+    public DBCollection searchMetadata() throws Exception {
         return mongoApplicationDB().getCollection("searchMetadata");
     }
 
