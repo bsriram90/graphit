@@ -1,7 +1,8 @@
 package edu.isu.coms.graphit.controllers;
 
 import com.mongodb.*;
-
+import edu.isu.coms.graphit.services.TweetTransformationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +14,10 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Created by Sriram on 26-11-2015.
@@ -26,6 +30,9 @@ public class TwitterController {
     private DBCollection tweetsDumpCollection;
     @Resource(name="searchmetadata")
     private DBCollection searchMetadataCollection;
+
+    @Autowired
+    private TweetTransformationService tweetTransformationService;
 
     @RequestMapping(value = "/timeline", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public @ResponseBody Object getTimelineTweets(@RequestParam("searchString") String searchString) {
@@ -71,7 +78,9 @@ public class TwitterController {
             }
             Iterator iterator = tweets.iterator();
             while(iterator.hasNext()){
-                BasicDBObject tweet = new BasicDBObject((LinkedHashMap<String,Object>)iterator.next());
+                LinkedHashMap<String, Object> rawTweet = (LinkedHashMap<String, Object>) iterator.next();
+                rawTweet.put("processed",false);
+                BasicDBObject tweet = new BasicDBObject(rawTweet);
                 if((Long)tweet.get("id") < max_id) {
                     max_id = (Long)tweet.get("id");
                 }
@@ -114,5 +123,11 @@ public class TwitterController {
     @RequestMapping(value = "/hello",method = RequestMethod.GET)
     public @ResponseBody String sayHello() {
         return "Hello";
+    }
+
+    @RequestMapping(value = "/transform",method = RequestMethod.GET)
+    public @ResponseBody String transform() {
+        tweetTransformationService.run();
+        return "Done";
     }
 }

@@ -5,9 +5,15 @@ import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import edu.isu.coms.graphit.ApplicationEnvironment;
+import edu.isu.coms.graphit.repositories.SolrRepository;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.XMLResponseParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.net.MalformedURLException;
 
 /**
  * Created by Naresh on 11/26/2015.
@@ -49,5 +55,17 @@ public class SpringConfig {
             db.authenticate(username, (password != null) ? password.toCharArray() : null);
         }
         return db;
+    }
+
+    @Bean
+    public SolrRepository solrRepository() throws MalformedURLException {
+        return new SolrRepository(solrServer());
+    }
+
+    @Bean
+    public SolrServer solrServer() throws MalformedURLException {
+        HttpSolrServer commonsHttpSolrServer = new HttpSolrServer(applicationEnvironment.getSolrUrl());
+        commonsHttpSolrServer.setParser(new XMLResponseParser());
+        return commonsHttpSolrServer;
     }
 }

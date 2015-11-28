@@ -30,4 +30,7 @@ public class ApplicationEnvironment {
     }
 
 
+    public String getSolrUrl() {
+        return this.environment.getProperty("solr.url");
+    }
 }

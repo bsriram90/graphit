@@ -32,7 +32,9 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-data-solr')
     compile('org.springframework.boot:spring-boot-starter-social-twitter')
     compile('org.springframework.boot:spring-boot-starter-web')
-    testCompile('org.springframework.boot:spring-boot-starter-test') 
+    compile('com.google.guava:guava:11.0.2')
+    compile('org.apache.solr:solr-core:5.3.1')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 
 
