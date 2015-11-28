@@ -1,0 +1,25 @@
+db.tweets.find({"root_finder_processed":{$exists:false}}).forEach(
+  function(doc) {
+    doc.root_finder_processed = false;
+    db.tweets.save(doc);
+  })
+
+db.tweets.find({retweet_id:null}).forEach(
+  function(doc) {
+    doc.retweet_mapper_processed = true;
+    db.tweets.save(doc);
+ })
+
+db.tweets.find({retweet_id:{$ne:null},"retweet_mapper_processed":{$exists:false}}).forEach(
+  function(doc) {
+    doc.retweet_mapper_processed = false;
+    db.tweets.save(doc);
+ })
+
+db.stats.save({"stat_name":"missed_retweet_count","stat_count":0});
+
+
+db.tweets.update(
+        {},
+      { $unset: { retweet_mapper_processed: "", root_finder_processed: "" } }
+)

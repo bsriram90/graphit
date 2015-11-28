@@ -39,6 +39,21 @@ public class SpringConfig {
         return mongoApplicationDB().getCollection("searchMetadata");
     }
 
+    @Bean(name = "roottweets")
+    public DBCollection rootTeets() throws Exception {
+        return mongoApplicationDB().getCollection("root_tweets");
+    }
+
+    @Bean(name = "conversations")
+    public DBCollection conversations() throws Exception {
+        return mongoApplicationDB().getCollection("conversations");
+    }
+
+    @Bean(name = "stats")
+    public DBCollection stats() throws Exception {
+        return mongoApplicationDB().getCollection("stats");
+    }
+
     @Bean
     public MongoClient mongo() throws Exception {
         MongoClientOptions.Builder builder = new MongoClientOptions.Builder();

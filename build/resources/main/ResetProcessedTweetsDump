@@ -1,0 +1,5 @@
+db.tweetsdump.find({}).forEach(
+  function(doc) {
+    doc.processed = false;
+    db.tweetsdump.save(doc);
+  })

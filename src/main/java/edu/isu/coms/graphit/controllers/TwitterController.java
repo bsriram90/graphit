@@ -1,6 +1,8 @@
 package edu.isu.coms.graphit.controllers;
 
 import com.mongodb.*;
+import edu.isu.coms.graphit.services.RetweetMapperService;
+import edu.isu.coms.graphit.services.RootTweetFinderService;
 import edu.isu.coms.graphit.services.TweetTransformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -33,6 +35,12 @@ public class TwitterController {
 
     @Autowired
     private TweetTransformationService tweetTransformationService;
+
+    @Autowired
+    private RootTweetFinderService rootTweetFinderService;
+
+    @Autowired
+    private RetweetMapperService retweetMapperService;
 
     @RequestMapping(value = "/timeline", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public @ResponseBody Object getTimelineTweets(@RequestParam("searchString") String searchString) {
@@ -128,6 +136,18 @@ public class TwitterController {
     @RequestMapping(value = "/transform",method = RequestMethod.GET)
     public @ResponseBody String transform() {
         tweetTransformationService.run();
+        return "Done";
+    }
+
+    @RequestMapping(value = "/rootFinder", method = RequestMethod.GET)
+    public @ResponseBody String findRoot() {
+        rootTweetFinderService.run();
+        return "Done";
+    }
+
+    @RequestMapping(value = "/map",method = RequestMethod.GET)
+    public @ResponseBody String mapRetweets(){
+        retweetMapperService.run();
         return "Done";
     }
 }
