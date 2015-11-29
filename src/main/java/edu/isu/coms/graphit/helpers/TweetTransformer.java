@@ -2,7 +2,6 @@ package edu.isu.coms.graphit.helpers;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.valueOf;
-import static org.joda.time.DateTime.parse;
 
 /**
  * Created by Naresh on 11/26/2015.
