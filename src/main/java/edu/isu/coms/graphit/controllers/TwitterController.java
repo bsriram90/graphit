@@ -1,6 +1,7 @@
 package edu.isu.coms.graphit.controllers;
 
 import com.mongodb.*;
+import edu.isu.coms.graphit.repositories.SolrRepository;
 import edu.isu.coms.graphit.services.RetweetMapperService;
 import edu.isu.coms.graphit.services.RootTweetFinderService;
 import edu.isu.coms.graphit.services.TweetTransformationService;
@@ -41,6 +42,9 @@ public class TwitterController {
 
     @Autowired
     private RetweetMapperService retweetMapperService;
+
+    @Autowired
+    private SolrRepository solrRepository;
 
     @RequestMapping(value = "/timeline", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     public @ResponseBody Object getTimelineTweets(@RequestParam("searchString") String searchString) {
@@ -148,6 +152,13 @@ public class TwitterController {
     @RequestMapping(value = "/map",method = RequestMethod.GET)
     public @ResponseBody String mapRetweets(){
         retweetMapperService.run();
+        return "Done";
+    }
+
+    @RequestMapping(value = "/primaryHashtags",method = RequestMethod.GET)
+    public @ResponseBody String getPrimaryHashtags(@RequestParam("keywords") String keywords){
+        String[] keywordsArray = keywords.split(" ");
+        System.out.println(solrRepository.getHashtagsForRootNodes(keywordsArray, 10));
         return "Done";
     }
 }
