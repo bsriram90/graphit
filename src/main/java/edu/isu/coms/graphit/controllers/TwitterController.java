@@ -33,6 +33,11 @@ public class TwitterController {
     private DBCollection tweetsDumpCollection;
     @Resource(name="searchmetadata")
     private DBCollection searchMetadataCollection;
+    @Resource(name="roottweets")
+    private DBCollection rootTweetsCollection;
+    @Resource(name="conversations")
+    private DBCollection conversationsCollection;
+
 
     @Autowired
     private TweetTransformationService tweetTransformationService;
@@ -159,6 +164,17 @@ public class TwitterController {
     public @ResponseBody String getPrimaryHashtags(@RequestParam("keywords") String keywords){
         String[] keywordsArray = keywords.split(" ");
         System.out.println(solrRepository.getHashtagsForRootNodes(keywordsArray, 10));
+        return "Done";
+    }
+
+    @RequestMapping(value = "/collectConversations",method = RequestMethod.GET)
+    public @ResponseBody String collectConversations(@RequestParam("keywords") String keywords){
+        String[] keywordsArray = keywords.split(" ");
+        List<String> popularHashtags = solrRepository.getHashtagsForRootNodes(keywordsArray, 50);
+        BasicDBObject query = new BasicDBObject("hashtags", popularHashtags);
+        DBCursor cursor = rootTweetsCollection.find(query);
+        List<DBObject> rootTweets = cursor.toArray();
+        conversationsCollection.insert(rootTweets);
         return "Done";
     }
 }
