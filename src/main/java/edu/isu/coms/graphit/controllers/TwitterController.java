@@ -1,10 +1,12 @@
 package edu.isu.coms.graphit.controllers;
 
 import com.mongodb.*;
+import edu.isu.coms.graphit.ApplicationEnvironment;
 import edu.isu.coms.graphit.repositories.SolrRepository;
 import edu.isu.coms.graphit.services.RetweetMapperService;
 import edu.isu.coms.graphit.services.RootTweetFinderService;
 import edu.isu.coms.graphit.services.TweetTransformationService;
+import org.apache.solr.common.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -17,10 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Sriram on 26-11-2015.
@@ -33,10 +32,10 @@ public class TwitterController {
     private DBCollection tweetsDumpCollection;
     @Resource(name="searchmetadata")
     private DBCollection searchMetadataCollection;
-    @Resource(name="roottweets")
-    private DBCollection rootTweetsCollection;
-    @Resource(name="conversations")
-    private DBCollection conversationsCollection;
+    @Resource(name="results")
+    private DBCollection resultsCollection;
+    @Autowired
+    private ApplicationEnvironment applicationEnvironment;
 
 
     @Autowired
@@ -163,18 +162,21 @@ public class TwitterController {
     @RequestMapping(value = "/primaryHashtags",method = RequestMethod.GET)
     public @ResponseBody String getPrimaryHashtags(@RequestParam("keywords") String keywords){
         String[] keywordsArray = keywords.split(" ");
-        System.out.println(solrRepository.getHashtagsForRootNodes(keywordsArray, 10));
+        System.out.println(solrRepository.getHashtagsForRootNodes(keywordsArray, 5));
         return "Done";
     }
 
     @RequestMapping(value = "/collectConversations",method = RequestMethod.GET)
     public @ResponseBody String collectConversations(@RequestParam("keywords") String keywords){
         String[] keywordsArray = keywords.split(" ");
-        List<String> popularHashtags = solrRepository.getHashtagsForRootNodes(keywordsArray, 50);
-        BasicDBObject query = new BasicDBObject("hashtags", popularHashtags);
-        DBCursor cursor = rootTweetsCollection.find(query);
-        List<DBObject> rootTweets = cursor.toArray();
-        conversationsCollection.insert(rootTweets);
+        List<String> relevantHashtags = solrRepository.getHashtagsForRootNodes(keywordsArray, applicationEnvironment.getFacetAcceptanceThreshold());
+        BasicDBObject resultStat = new BasicDBObject("hashtags", relevantHashtags);
+        resultsCollection.remove(new BasicDBObject("name","relevantHashtags"));
+        resultStat.put("keywords11", keywords);
+        resultStat.put("name","relevantHashtags");
+        resultStat.put("time", new Date());
+        resultsCollection.insert(resultStat);
+        solrRepository.findRootTweets(relevantHashtags,15);
         return "Done";
     }
 }

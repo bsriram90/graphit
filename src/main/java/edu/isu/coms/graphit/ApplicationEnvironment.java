@@ -33,4 +33,8 @@ public class ApplicationEnvironment {
     public String getSolrUrl() {
         return this.environment.getProperty("solr.url");
     }
+
+    public float getFacetAcceptanceThreshold() {
+        return Float.parseFloat(this.environment.getProperty("facet.acceptance.threshold"));
+    }
 }

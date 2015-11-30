@@ -44,6 +44,11 @@ public class SpringConfig {
         return mongoApplicationDB().getCollection("root_tweets");
     }
 
+    @Bean(name = "results")
+    public DBCollection results() throws Exception {
+        return mongoApplicationDB().getCollection("results");
+    }
+
     @Bean(name = "conversations")
     public DBCollection conversations() throws Exception {
         return mongoApplicationDB().getCollection("conversations");
