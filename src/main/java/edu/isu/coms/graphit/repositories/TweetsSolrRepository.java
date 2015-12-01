@@ -20,11 +20,11 @@ import java.util.List;
  * Created by Naresh on 11/27/2015.
  */
 @Repository
-public class SolrRepository {
+public class TweetsSolrRepository {
     private SolrServer solrServer;
 
     @Autowired
-    public SolrRepository(SolrServer solrServer) {
+    public TweetsSolrRepository(SolrServer solrServer) {
         this.solrServer = solrServer;
     }
 

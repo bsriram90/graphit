@@ -30,8 +30,12 @@ public class ApplicationEnvironment {
     }
 
 
-    public String getSolrUrl() {
-        return this.environment.getProperty("solr.url");
+    public String getSolrUrlForTweets() {
+        return this.environment.getProperty("solr.tweets.url");
+    }
+
+    public String getSolrUrlForRootTweets() {
+        return this.environment.getProperty("solr.root_tweets.url");
     }
 
     public float getFacetAcceptanceThreshold() {

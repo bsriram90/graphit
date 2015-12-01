@@ -3,7 +3,7 @@ package edu.isu.coms.graphit.services;
 import com.mongodb.DBObject;
 import edu.isu.coms.graphit.helpers.SolrDocTransformer;
 import edu.isu.coms.graphit.helpers.TweetTransformer;
-import edu.isu.coms.graphit.repositories.SolrRepository;
+import edu.isu.coms.graphit.repositories.TweetsSolrRepository;
 import edu.isu.coms.graphit.repositories.TweetDumpRepository;
 import edu.isu.coms.graphit.repositories.TweetRepository;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -31,7 +31,7 @@ public class TweetTransformationService {
     private TweetDumpRepository tweetDumpRepository;
 
     @Autowired
-    private SolrRepository solrRepository;
+    private TweetsSolrRepository tweetsSolrRepository;
 
     @Autowired
     private TweetTransformer tweetTransformer;
@@ -53,7 +53,7 @@ public class TweetTransformationService {
                     tweetDumpRepository.save(rawTweet);
                     transformedTweetCounter++;
                 }
-                solrRepository.index(tweetSolrDocs);
+                tweetsSolrRepository.index(tweetSolrDocs);
                 System.out.println("Total Tweets transformed: "+ transformedTweetCounter);
                 tweetsFromDump = tweetDumpRepository.getTweetsFromDump(100, of("processed", false));
             } catch (IOException e) {

@@ -5,7 +5,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import edu.isu.coms.graphit.ApplicationEnvironment;
-import edu.isu.coms.graphit.repositories.SolrRepository;
+import edu.isu.coms.graphit.repositories.RootTweetSolrRepository;
+import edu.isu.coms.graphit.repositories.TweetsSolrRepository;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.impl.XMLResponseParser;
@@ -77,14 +78,19 @@ public class SpringConfig {
         return db;
     }
 
-    @Bean
-    public SolrRepository solrRepository() throws MalformedURLException {
-        return new SolrRepository(solrServer());
+    @Bean(name="tweetSolrRepository")
+    public TweetsSolrRepository tweetSolrRepository() throws MalformedURLException {
+        return new TweetsSolrRepository(solrServer(applicationEnvironment.getSolrUrlForTweets()));
+    }
+
+    @Bean(name="rootTweetSolrRepository")
+    public RootTweetSolrRepository rootTweetSolrRepository() throws MalformedURLException {
+        return new RootTweetSolrRepository(solrServer(applicationEnvironment.getSolrUrlForRootTweets()));
     }
 
     @Bean
-    public SolrServer solrServer() throws MalformedURLException {
-        HttpSolrServer commonsHttpSolrServer = new HttpSolrServer(applicationEnvironment.getSolrUrl());
+    public SolrServer solrServer(String solrUrl) throws MalformedURLException {
+        HttpSolrServer commonsHttpSolrServer = new HttpSolrServer(solrUrl);
         commonsHttpSolrServer.setParser(new XMLResponseParser());
         return commonsHttpSolrServer;
     }
