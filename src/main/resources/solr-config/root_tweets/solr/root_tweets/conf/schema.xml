@@ -148,8 +148,10 @@
     <field name="urls" type="string" indexed="true" stored="true" multiValued="true"/> 
     <field name="user_mentions" type="string" indexed="true" stored="true" multiValued="true"/> 
     <field name="retweet_count_in_dump" type="int" indexed="true" stored="true"/>
+    <field name="in_conversation" type="boolean" indexed="true" stored="true"/>
     <dynamicField name="*_retweeted_id" type="long"  indexed="true"  stored="true"/>
     <dynamicField name="*_retweeted_user_id" type="long"  indexed="true"  stored="true"/>
+
 
     <uniqueKey>id</uniqueKey>
 

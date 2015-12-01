@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Repository
 public class TweetsSolrRepository {
-    private SolrServer solrServer;
+    SolrServer solrServer;
 
     @Autowired
     public TweetsSolrRepository(SolrServer solrServer) {
@@ -64,7 +64,7 @@ public class TweetsSolrRepository {
         return results;
     }
 
-    private String getQueryText(Object[] keywords) {
+    String getQueryText(Object[] keywords) {
         String textQuery = "";
         for (Object keyword : keywords) {
             if (!textQuery.equals("")) {
@@ -74,27 +74,6 @@ public class TweetsSolrRepository {
         }
         textQuery = "(" + textQuery + ")";
         return textQuery;
-    }
-
-    public void findRootTweets(List<String> hashtags, float acceptancePercentage) {
-        SolrQuery query = new SolrQuery();
-        String queryString = getQueryText(hashtags.toArray());
-        query.set("q", "text:" +queryString + ", hashtags:" + queryString);
-        try {
-            QueryResponse response = this.solrServer.query(query);
-            SolrDocumentList results = response.getResults();
-            float acceptanceThreshold = response.getResults().getNumFound() * (acceptancePercentage / 100);
-            int count = 0;
-            for(SolrDocument doc : results) {
-                if(count++ < acceptanceThreshold) {
-                    doc.setField("in_conversation",true);
-                    // TODO : use different repo
-                    this.solrServer.add(ClientUtils.toSolrInputDocument(doc));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
 

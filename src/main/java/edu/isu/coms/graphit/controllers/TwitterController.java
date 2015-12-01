@@ -4,10 +4,7 @@ import com.mongodb.*;
 import edu.isu.coms.graphit.ApplicationEnvironment;
 import edu.isu.coms.graphit.repositories.RootTweetSolrRepository;
 import edu.isu.coms.graphit.repositories.TweetsSolrRepository;
-import edu.isu.coms.graphit.services.RetweetMapperService;
-import edu.isu.coms.graphit.services.RootTweetFinderService;
-import edu.isu.coms.graphit.services.RootTweetSolrIndexer;
-import edu.isu.coms.graphit.services.TweetTransformationService;
+import edu.isu.coms.graphit.services.*;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -42,6 +39,9 @@ public class TwitterController {
 
     @Autowired
     private RootTweetSolrIndexer rootTweetSolrIndexer;
+
+    @Autowired
+    private ConversationDetectionService conversationDetectionService;
 
 
     @Autowired
@@ -171,21 +171,13 @@ public class TwitterController {
     @RequestMapping(value = "/primaryHashtags",method = RequestMethod.GET)
     public @ResponseBody String getPrimaryHashtags(@RequestParam("keywords") String keywords){
         String[] keywordsArray = keywords.split(" ");
-        System.out.println(rootTweetSolrRepository.getHashtagsForRootNodes(keywordsArray, 10));
+        System.out.println(rootTweetSolrRepository.getHashtagsForRootNodes(keywordsArray, 1));
         return "Done";
     }
 
     @RequestMapping(value = "/collectConversations",method = RequestMethod.GET)
     public @ResponseBody String collectConversations(@RequestParam("keywords") String keywords){
-        String[] keywordsArray = keywords.split(" ");
-        List<String> relevantHashtags = rootTweetSolrRepository.getHashtagsForRootNodes(keywordsArray, applicationEnvironment.getFacetAcceptanceThreshold());
-        BasicDBObject resultStat = new BasicDBObject("hashtags", relevantHashtags);
-        resultsCollection.remove(new BasicDBObject("name","relevantHashtags"));
-        resultStat.put("keywords11", keywords);
-        resultStat.put("name","relevantHashtags");
-        resultStat.put("time", new Date());
-        resultsCollection.insert(resultStat);
-        rootTweetSolrRepository.findRootTweets(relevantHashtags,15);
+        conversationDetectionService.run(keywords);
         return "Done";
     }
 
