@@ -1,5 +1,6 @@
 package edu.isu.coms.graphit.repositories;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import org.springframework.stereotype.Repository;
@@ -21,6 +22,7 @@ public class ConversationsRepository {
     }
 
     public void save(List<DBObject> conversationsTobeSaved){
+        conversations.remove(new BasicDBObject());
         conversations.insert(conversationsTobeSaved);
     }
 
