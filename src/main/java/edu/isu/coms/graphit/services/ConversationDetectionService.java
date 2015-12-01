@@ -39,7 +39,7 @@ public class ConversationDetectionService {
         String[] keywordsArray = keywords.split(" ");
         List<String> relevantHashtags = rootTweetSolrRepository.getHashtagsForRootNodes(keywordsArray, applicationEnvironment.getFacetAcceptanceThreshold());
         resultsRepository.updateRelevantHashTags(of("keywords",keywords,"name","relevantHashtags","time",new Date(),"value",relevantHashtags));
-        SolrDocumentList searchresults =  rootTweetSolrRepository.findRootTweets(relevantHashtags, 15);
+        SolrDocumentList searchresults =  rootTweetSolrRepository.findRootTweets(relevantHashtags, applicationEnvironment.getConversationsFilterLimit());
         conversationsRepository.save(solrToMongoDocTransformer.transform(searchresults));
     }
 }

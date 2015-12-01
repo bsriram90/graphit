@@ -41,4 +41,7 @@ public class ApplicationEnvironment {
     public float getFacetAcceptanceThreshold() {
         return Float.parseFloat(this.environment.getProperty("facet.acceptance.threshold"));
     }
+    public int getConversationsFilterLimit(){
+        return Integer.parseInt(this.environment.getProperty("conversations.filter.limit"));
+    }
 }
