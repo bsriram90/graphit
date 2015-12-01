@@ -25,7 +25,10 @@ public class RootTweetSolrRepository extends TweetsSolrRepository {
         SolrQuery query = new SolrQuery();
         SolrDocumentList results = new SolrDocumentList();
         String queryString = getQueryText(hashtags.toArray());
-        query.set("q", "text:" + queryString + ", hashtags:" + queryString);
+        query.set("q.alt", "text:" + queryString + ", hashtags:" + queryString);
+        query.set("fq","retweet_count_in_dump : [50 TO *]");
+        query.set("bf", "retweet_count_in_dump^0.2");
+        query.set("defType","dismax");
         try {
             QueryResponse response = solrServer.query(query);
             results = response.getResults();

@@ -24,8 +24,7 @@ db.tweets.update(
       { $unset: { retweet_mapper_processed: "", root_finder_processed: "" } }
 )
 
-db.root_tweets.find({"indexed":true).forEach(
-  function(doc) {
+db.root_tweets.find({"indexed":true}).forEach(function(doc) {
     doc.indexed = false;
     db.root_tweets.save(doc);
   })
