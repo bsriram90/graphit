@@ -17,6 +17,9 @@ import org.springframework.context.annotation.Configuration;
 import java.net.MalformedURLException;
 
 /**
+ * This class contains all configuration objects. This class would be used to MongoDB DBCollections to access any
+ * MongoDB collection and SolrRepository objects to access various cores in Solr.
+ *
  * Created by Naresh on 11/26/2015.
  */
 @Configuration
