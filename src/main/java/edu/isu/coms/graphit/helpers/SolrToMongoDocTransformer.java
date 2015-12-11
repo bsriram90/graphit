@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * This class is used to convert a Solr Document to a MongoDB DBObject.
+ *
  * Created by Naresh on 11/30/2015.
  */
 @Component

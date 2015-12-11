@@ -10,6 +10,9 @@ import java.util.Objects;
 import static java.lang.String.valueOf;
 
 /**
+ * This object transforms a MongoDB DBObject to a Solr document by reading each fields in the DBObject and putting them
+ * in a new Solr Document.
+ *
  * Created by Naresh on 11/27/2015.
  */
 @Component
