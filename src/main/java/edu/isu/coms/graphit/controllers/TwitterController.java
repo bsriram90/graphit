@@ -1,11 +1,13 @@
 package edu.isu.coms.graphit.controllers;
 
+import com.google.gson.Gson;
 import com.mongodb.*;
-import edu.isu.coms.graphit.ApplicationEnvironment;
+import edu.isu.coms.graphit.repositories.ConversationsRepository;
 import edu.isu.coms.graphit.repositories.RootTweetSolrRepository;
-import edu.isu.coms.graphit.repositories.TweetsSolrRepository;
 import edu.isu.coms.graphit.services.*;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.json.JSONObject;
+import org.json.XML;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -19,21 +21,24 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * This is the main controller that is used to perform data collection and all steps required for conversation
  * detection.
- *
+ * <p>
  * Created by Sriram on 26-11-2015.
  */
 @Controller
 @RequestMapping("/api/twitter")
 public class TwitterController {
 
-    @Resource(name="tweetsdump")
+    @Resource(name = "tweetsdump")
     private DBCollection tweetsDumpCollection;
-    @Resource(name="searchmetadata")
+    @Resource(name = "searchmetadata")
     private DBCollection searchMetadataCollection;
     @Autowired
     private RootTweetSolrIndexer rootTweetSolrIndexer;
@@ -47,6 +52,11 @@ public class TwitterController {
     private RetweetMapperService retweetMapperService;
     @Autowired
     private RootTweetSolrRepository rootTweetSolrRepository;
+    @Autowired
+    private AssociatedTweetMapperService associatedTweetMapperService;
+
+    @Autowired
+    private ConversationsRepository conversationsRepository;
 
 
     /**
@@ -57,9 +67,11 @@ public class TwitterController {
      * @return
      */
     @RequestMapping(value = "/timeline", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
-    public @ResponseBody Object getTimelineTweets(@RequestParam("searchString") String searchString) {
+    public
+    @ResponseBody
+    Object getTimelineTweets(@RequestParam("searchString") String searchString) {
         // the method returns false if there are no results. We replace all space with '+' for uniform encoding
-        while(performRawTweetCollection(searchString.replace(" ", "+"))) {
+        while (performRawTweetCollection(searchString.replace(" ", "+"))) {
             try {
                 System.out.print("Sleeping for 15 mins");
                 Thread.sleep(15 * 60 * 1000);
@@ -84,7 +96,7 @@ public class TwitterController {
         boolean noResults = false;
         // initialize rest templates and headers
         RestTemplate restTemplate = new RestTemplate();
-        String queryString = "?q="+ searchString +"&count=100&result_type=recent&max_id=";
+        String queryString = "?q=" + searchString + "&count=100&result_type=recent&max_id=";
         // if the search string has already been used, continue from the last result
         Long max_id = findMaxIdForSearchString(searchString);
         String authToken = "Bearer AAAAAAAAAAAAAAAAAAAAAH7DiAAAAAAAzaHM6fVd%2BZoecdaOBoLVIg%2FnODY%3D6iSJg386lmd6KdmTx4DMLpqHQXmI4tQgZ5oYLZtCIj2tGLUBga";
@@ -94,38 +106,38 @@ public class TwitterController {
         headers.add("Authorization", authToken);
         HttpEntity<String> request = new HttpEntity<String>(headers);
         // Perform 180 requests as twitter allows that many requests every 15 mins.
-        while(count++ < 180){
+        while (count++ < 180) {
             String queryURL = timelineUrl;
             BulkWriteOperation bulk = tweetsDumpCollection.initializeUnorderedBulkOperation();
             // use max_id if present
-            if (max_id != null){
+            if (max_id != null) {
                 queryURL += max_id;
             } else {
                 max_id = Long.MAX_VALUE;
             }
             System.out.println("Querying twitter - " + queryURL);
-            ResponseEntity<Object> responseEntity =  restTemplate.exchange(queryURL, HttpMethod.GET, request, Object.class);
-            LinkedHashMap<String,Object> results= (LinkedHashMap<String,Object>)responseEntity.getBody();
+            ResponseEntity<Object> responseEntity = restTemplate.exchange(queryURL, HttpMethod.GET, request, Object.class);
+            LinkedHashMap<String, Object> results = (LinkedHashMap<String, Object>) responseEntity.getBody();
             // parse the reponse to find the tweets
-            List tweets = (ArrayList)results.get("statuses");
-            if(tweets.size() < 1) {
+            List tweets = (ArrayList) results.get("statuses");
+            if (tweets.size() < 1) {
                 // if there are no results, use this flag to end data collection on the topic
                 noResults = true;
                 break;
             }
             Iterator iterator = tweets.iterator();
-            while(iterator.hasNext()){
+            while (iterator.hasNext()) {
                 LinkedHashMap<String, Object> rawTweet = (LinkedHashMap<String, Object>) iterator.next();
                 // processed flag is used to know if tweet has been indexed
-                rawTweet.put("processed",false);
+                rawTweet.put("processed", false);
                 BasicDBObject tweet = new BasicDBObject(rawTweet);
                 // we keep track of th least id for pagination with Twitter
-                if((Long)tweet.get("id") < max_id) {
-                    max_id = (Long)tweet.get("id");
+                if ((Long) tweet.get("id") < max_id) {
+                    max_id = (Long) tweet.get("id");
                 }
                 bulk.insert(tweet);
             }
-            LinkedHashMap<String,Object> searchMetadata = (LinkedHashMap<String,Object>)results.get("search_metadata");
+            LinkedHashMap<String, Object> searchMetadata = (LinkedHashMap<String, Object>) results.get("search_metadata");
             searchMetadata.put("max_id", max_id);
             try {
                 // we do untracked inserts to ignore duplicate tweets inserted into the database
@@ -137,7 +149,7 @@ public class TwitterController {
                 System.exit(1);
             }
         }
-        if(noResults) {
+        if (noResults) {
             return false;
         } else {
             return true;
@@ -155,58 +167,77 @@ public class TwitterController {
         String encodedSearchString = null;
         try {
             encodedSearchString = URLEncoder.encode(searchString, "UTF-8").replace("+", "%2B");
-        } catch (UnsupportedEncodingException e){
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         BasicDBObject query = new BasicDBObject("query", encodedSearchString);
-        BasicDBObject fields = new BasicDBObject("max_id",1);
-        BasicDBObject sort = new BasicDBObject("max_id",1);
-        DBCursor cursor = searchMetadataCollection.find(query,fields).sort(sort).limit(1);
+        BasicDBObject fields = new BasicDBObject("max_id", 1);
+        BasicDBObject sort = new BasicDBObject("max_id", 1);
+        DBCursor cursor = searchMetadataCollection.find(query, fields).sort(sort).limit(1);
         while (cursor.hasNext()) {
             // this would only return one values, we find the max_id from that record.
-            return (Long)cursor.next().get("max_id");
+            return (Long) cursor.next().get("max_id");
         }
         return null;
     }
 
-    @RequestMapping(value = "/hello",method = RequestMethod.GET)
-    public @ResponseBody String sayHello() {
+    @RequestMapping(value = "/hello", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    String sayHello() {
         return "Hello";
     }
 
-    @RequestMapping(value = "/transform",method = RequestMethod.GET)
-    public @ResponseBody String transform() {
+    @RequestMapping(value = "/transform", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    String transform() {
         tweetTransformationService.run();
         return "Done";
     }
 
     @RequestMapping(value = "/rootFinder", method = RequestMethod.GET)
-    public @ResponseBody String findRoot() {
+    public
+    @ResponseBody
+    String findRoot() {
         rootTweetFinderService.run();
         return "Done";
     }
 
-    @RequestMapping(value = "/map",method = RequestMethod.GET)
-    public @ResponseBody String mapRetweets(){
+    @RequestMapping(value = "/map", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    String mapRetweets() {
         retweetMapperService.run();
         return "Done";
     }
 
-    @RequestMapping(value = "/primaryHashtags",method = RequestMethod.GET)
-    public @ResponseBody String getPrimaryHashtags(@RequestParam("keywords") String keywords){
+    @RequestMapping(value = "/primaryHashtags", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    String getPrimaryHashtags(@RequestParam("keywords") String keywords) {
         String[] keywordsArray = keywords.split(" ");
         System.out.println(rootTweetSolrRepository.getHashtagsForRootNodes(keywordsArray, 1));
         return "Done";
     }
 
-    @RequestMapping(value = "/collectConversations",method = RequestMethod.GET)
-    public @ResponseBody String collectConversations(@RequestParam("keywords") String keywords){
+    @RequestMapping(value = "/collectConversations", method = RequestMethod.GET)
+   @ResponseBody  public List<DBObject> collectConversations(@RequestParam("keywords") String keywords) {
         conversationDetectionService.run(keywords);
-        return "Done";
+        associatedTweetMapperService.run();
+        return conversationsRepository.getConversations();
     }
 
-    @RequestMapping(value = "/indexRootTweets",method = RequestMethod.GET)
-    public @ResponseBody String indexRootTweets(){
+    private String formatRepsonse(List<DBObject> conversations) {
+        String html = "";
+
+        return html;
+    }
+
+    @RequestMapping(value = "/indexRootTweets", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    String indexRootTweets() {
         try {
             rootTweetSolrIndexer.run();
         } catch (IOException e) {

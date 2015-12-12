@@ -52,7 +52,7 @@ public class TweetsSolrRepository {
                 if(facetField.getName().equals("hashtags")) {
                     List<FacetField.Count> counts = facetField.getValues();
                     for(FacetField.Count count : counts) {
-                        if(count.getCount() >= acceptanceThreshold) {
+                        if(count.getCount() >= acceptanceThreshold && count.getCount()>0) {
                             results.add(count.getName());
                         }
                     }
@@ -63,6 +63,7 @@ public class TweetsSolrRepository {
         }
         return results;
     }
+
 
     String getQueryText(Object[] keywords) {
         String textQuery = "";

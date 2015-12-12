@@ -34,6 +34,8 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('com.google.guava:guava:11.0.2')
     compile('org.apache.solr:solr-core:5.3.1')
+    compile('org.json:json:20140107')
+    compile('com.google.code.gson:gson:2.3.1')
     testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 

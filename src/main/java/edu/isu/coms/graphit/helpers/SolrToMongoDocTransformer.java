@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Component
 public class SolrToMongoDocTransformer {
-    public List<DBObject> transform(SolrDocumentList searchresults) {
+    public List<DBObject> transform(List<SolrDocument> searchresults) {
         List<DBObject> conversations =  new ArrayList<>();
         for (SolrDocument searchresult : searchresults) {
             DBObject conversation = new BasicDBObject();
